@@ -14,6 +14,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICaptchaService, CaptchaService>();
 
 var app = builder.Build();
 

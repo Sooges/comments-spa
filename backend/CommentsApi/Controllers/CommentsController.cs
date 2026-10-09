@@ -9,10 +9,17 @@ namespace CommentsApi.Controllers;
 public class CommentsController : ControllerBase
 {
     private readonly ICommentService _commentService;
+    private readonly IHtmlTextProcessor _htmlTextProcessor;
+    private readonly ICaptchaService _captchaService;
 
-    public CommentsController(ICommentService commentService)
+    public CommentsController(
+        ICommentService commentService,
+        IHtmlTextProcessor htmlTextProcessor,
+        ICaptchaService captchaService)
     {
         _commentService = commentService;
+        _htmlTextProcessor = htmlTextProcessor;
+        _captchaService = captchaService;
     }
 
     [HttpGet]
@@ -22,9 +29,40 @@ public class CommentsController : ControllerBase
         return Ok(page);
     }
 
+    // shows how the text will look like, nothing is saved
+    [HttpPost("preview")]
+    public ActionResult<PreviewResponse> Preview(PreviewRequest request)
+    {
+        var text = _htmlTextProcessor.Process(request.Text);
+        if (!text.IsValid)
+        {
+            ModelState.AddModelError(nameof(request.Text), text.Error!);
+            return ValidationProblem(ModelState);
+        }
+
+        return Ok(new PreviewResponse { Html = text.Html });
+    }
+
     [HttpPost]
     public async Task<ActionResult<CommentDto>> Create(CreateCommentRequest request)
     {
+        var text = _htmlTextProcessor.Process(request.Text);
+        if (!text.IsValid)
+        {
+            ModelState.AddModelError(nameof(request.Text), text.Error!);
+            return ValidationProblem(ModelState);
+        }
+
+        // the captcha is checked last, because every captcha can be used only once
+        if (!_captchaService.Validate(request.CaptchaId, request.CaptchaCode))
+        {
+            ModelState.AddModelError(nameof(request.CaptchaCode), "Неверный код с картинки.");
+            return ValidationProblem(ModelState);
+        }
+
+        // only the checked and escaped HTML is saved
+        request.Text = text.Html;
+
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         var userAgent = Request.Headers.UserAgent.ToString();
 
