@@ -25,4 +25,12 @@ public class CreateCommentRequest
 
     // id of the comment we reply to, null for a new top-level comment
     public int? ParentId { get; set; }
+
+    [Required(ErrorMessage = "Не удалось получить CAPTCHA, обновите картинку.")]
+    public string CaptchaId { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Введите код с картинки.")]
+    [StringLength(10, ErrorMessage = "Код слишком длинный.")]
+    [RegularExpression("^[a-zA-Z0-9]+$", ErrorMessage = "Код может содержать только латинские буквы и цифры.")]
+    public string CaptchaCode { get; set; } = string.Empty;
 }

@@ -10,11 +10,16 @@ public class CommentsController : ControllerBase
 {
     private readonly ICommentService _commentService;
     private readonly IHtmlTextProcessor _htmlTextProcessor;
+    private readonly ICaptchaService _captchaService;
 
-    public CommentsController(ICommentService commentService, IHtmlTextProcessor htmlTextProcessor)
+    public CommentsController(
+        ICommentService commentService,
+        IHtmlTextProcessor htmlTextProcessor,
+        ICaptchaService captchaService)
     {
         _commentService = commentService;
         _htmlTextProcessor = htmlTextProcessor;
+        _captchaService = captchaService;
     }
 
     [HttpGet]
@@ -45,6 +50,13 @@ public class CommentsController : ControllerBase
         if (!text.IsValid)
         {
             ModelState.AddModelError(nameof(request.Text), text.Error!);
+            return ValidationProblem(ModelState);
+        }
+
+        // the captcha is checked last, because every captcha can be used only once
+        if (!_captchaService.Validate(request.CaptchaId, request.CaptchaCode))
+        {
+            ModelState.AddModelError(nameof(request.CaptchaCode), "Неверный код с картинки.");
             return ValidationProblem(ModelState);
         }
 
