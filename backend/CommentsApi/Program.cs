@@ -16,6 +16,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICaptchaService, CaptchaService>();
+
 var app = builder.Build();
 
 // Create the database and apply pending migrations on startup
