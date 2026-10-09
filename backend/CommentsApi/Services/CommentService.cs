@@ -59,13 +59,45 @@ public class CommentService : ICommentService
             .Take(PageSize)
             .ToListAsync();
 
+        var items = comments.Select(ToDto).ToList();
+        await LoadRepliesAsync(items);
+
         return new PagedResult<CommentDto>
         {
-            Items = comments.Select(ToDto).ToList(),
+            Items = items,
             Page = query.Page,
             PageSize = PageSize,
             TotalCount = totalCount
         };
+    }
+
+    // Loads the replies level by level: one query for every nesting level
+    private async Task LoadRepliesAsync(List<CommentDto> parents)
+    {
+        var currentLevel = parents;
+
+        while (currentLevel.Count > 0)
+        {
+            var parentIds = currentLevel.Select(c => c.Id).ToList();
+
+            var replies = await _db.Comments
+                .AsNoTracking()
+                .Where(c => c.ParentId != null && parentIds.Contains(c.ParentId.Value))
+                .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+                .ToListAsync();
+
+            var parentsById = currentLevel.ToDictionary(c => c.Id);
+            var nextLevel = new List<CommentDto>();
+
+            foreach (var reply in replies)
+            {
+                var dto = ToDto(reply);
+                parentsById[reply.ParentId!.Value].Replies.Add(dto);
+                nextLevel.Add(dto);
+            }
+
+            currentLevel = nextLevel;
+        }
     }
 
     private static IQueryable<Comment> ApplySorting(IQueryable<Comment> comments, CommentQuery query)
