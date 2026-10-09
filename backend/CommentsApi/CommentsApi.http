@@ -8,7 +8,19 @@ Accept: application/json
 GET {{CommentsApi_HostAddress}}/api/comments?sortBy=userName&sortOrder=asc&page=2
 Accept: application/json
 
-### Add a top-level comment
+### Get a captcha: "id" and the picture ("image" is a data URI, open it in a browser to see the code)
+GET {{CommentsApi_HostAddress}}/api/captcha
+Accept: application/json
+
+### Preview the text (nothing is saved), allowed tags: a, code, i, strong
+POST {{CommentsApi_HostAddress}}/api/comments/preview
+Content-Type: application/json
+
+{
+  "text": "Hello <strong>world</strong> <a href=\"https://example.com\" title=\"Site\">link</a>"
+}
+
+### Add a top-level comment (use the id of a fresh captcha and the code from its picture)
 POST {{CommentsApi_HostAddress}}/api/comments
 Content-Type: application/json
 
@@ -16,7 +28,9 @@ Content-Type: application/json
   "userName": "john",
   "email": "john@example.com",
   "homePage": "https://example.com",
-  "text": "First comment"
+  "text": "First comment",
+  "captchaId": "<captcha id>",
+  "captchaCode": "<code from the picture>"
 }
 
 ### Reply to the comment with id 1
@@ -27,5 +41,7 @@ Content-Type: application/json
   "userName": "mary",
   "email": "mary@example.com",
   "text": "A reply",
-  "parentId": 1
+  "parentId": 1,
+  "captchaId": "<captcha id>",
+  "captchaCode": "<code from the picture>"
 }
