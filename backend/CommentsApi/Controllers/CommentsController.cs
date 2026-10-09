@@ -9,10 +9,12 @@ namespace CommentsApi.Controllers;
 public class CommentsController : ControllerBase
 {
     private readonly ICommentService _commentService;
+    private readonly IHtmlTextProcessor _htmlTextProcessor;
 
-    public CommentsController(ICommentService commentService)
+    public CommentsController(ICommentService commentService, IHtmlTextProcessor htmlTextProcessor)
     {
         _commentService = commentService;
+        _htmlTextProcessor = htmlTextProcessor;
     }
 
     [HttpGet]
@@ -25,6 +27,16 @@ public class CommentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CommentDto>> Create(CreateCommentRequest request)
     {
+        var text = _htmlTextProcessor.Process(request.Text);
+        if (!text.IsValid)
+        {
+            ModelState.AddModelError(nameof(request.Text), text.Error!);
+            return ValidationProblem(ModelState);
+        }
+
+        // only the checked and escaped HTML is saved
+        request.Text = text.Html;
+
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         var userAgent = Request.Headers.UserAgent.ToString();
 
