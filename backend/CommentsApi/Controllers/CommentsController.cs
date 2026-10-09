@@ -24,6 +24,20 @@ public class CommentsController : ControllerBase
         return Ok(page);
     }
 
+    // shows how the text will look like, nothing is saved
+    [HttpPost("preview")]
+    public ActionResult<PreviewResponse> Preview(PreviewRequest request)
+    {
+        var text = _htmlTextProcessor.Process(request.Text);
+        if (!text.IsValid)
+        {
+            ModelState.AddModelError(nameof(request.Text), text.Error!);
+            return ValidationProblem(ModelState);
+        }
+
+        return Ok(new PreviewResponse { Html = text.Html });
+    }
+
     [HttpPost]
     public async Task<ActionResult<CommentDto>> Create(CreateCommentRequest request)
     {
