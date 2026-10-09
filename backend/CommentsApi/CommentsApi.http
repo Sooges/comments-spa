@@ -1,4 +1,31 @@
-﻿@CommentsApi_HostAddress = http://localhost:5154
+@CommentsApi_HostAddress = http://localhost:5154
 
-###
+### Get the first page of comments (newest first)
+GET {{CommentsApi_HostAddress}}/api/comments
+Accept: application/json
 
+### Sort by user name, ascending, second page
+GET {{CommentsApi_HostAddress}}/api/comments?sortBy=userName&sortOrder=asc&page=2
+Accept: application/json
+
+### Add a top-level comment
+POST {{CommentsApi_HostAddress}}/api/comments
+Content-Type: application/json
+
+{
+  "userName": "john",
+  "email": "john@example.com",
+  "homePage": "https://example.com",
+  "text": "First comment"
+}
+
+### Reply to the comment with id 1
+POST {{CommentsApi_HostAddress}}/api/comments
+Content-Type: application/json
+
+{
+  "userName": "mary",
+  "email": "mary@example.com",
+  "text": "A reply",
+  "parentId": 1
+}
