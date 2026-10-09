@@ -15,6 +15,13 @@ public class CommentsController : ControllerBase
         _commentService = commentService;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<CommentDto>>> GetComments([FromQuery] CommentQuery query)
+    {
+        var page = await _commentService.GetPageAsync(query);
+        return Ok(page);
+    }
+
     [HttpPost]
     public async Task<ActionResult<CommentDto>> Create(CreateCommentRequest request)
     {

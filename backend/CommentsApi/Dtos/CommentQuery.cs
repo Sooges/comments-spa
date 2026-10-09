@@ -24,6 +24,6 @@ public class CommentQuery
     [EnumDataType(typeof(SortDirection))]
     public SortDirection SortOrder { get; set; } = SortDirection.Desc;
 
-    [Range(1, int.MaxValue)]
+    [Range(1, 100000)]
     public int Page { get; set; } = 1;
 }
