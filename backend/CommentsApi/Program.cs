@@ -15,6 +15,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddSingleton<ICommentEvents, CommentEvents>();
+builder.Services.AddSingleton<ICommentCache, CommentCache>();
+builder.Services.AddSingleton<CommentEventSubscriber>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
 
@@ -25,6 +27,9 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICaptchaService, CaptchaService>();
 
 var app = builder.Build();
+
+// The subscriber starts to listen to the comment events as soon as it is created
+app.Services.GetRequiredService<CommentEventSubscriber>();
 
 // Create the database and apply pending migrations on startup
 using (var scope = app.Services.CreateScope())
