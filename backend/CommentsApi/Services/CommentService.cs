@@ -1,5 +1,6 @@
 using CommentsApi.Data;
 using CommentsApi.Dtos;
+using CommentsApi.Events;
 using CommentsApi.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,11 +13,13 @@ public class CommentService : ICommentService
 
     private readonly AppDbContext _db;
     private readonly IFileStorage _fileStorage;
+    private readonly ICommentEvents _events;
 
-    public CommentService(AppDbContext db, IFileStorage fileStorage)
+    public CommentService(AppDbContext db, IFileStorage fileStorage, ICommentEvents events)
     {
         _db = db;
         _fileStorage = fileStorage;
+        _events = events;
     }
 
     public async Task<CommentDto?> CreateAsync(
@@ -79,6 +82,8 @@ public class CommentService : ICommentService
 
             throw;
         }
+
+        _events.RaiseCommentCreated(comment.Id, comment.ParentId);
 
         return ToDto(comment);
     }
