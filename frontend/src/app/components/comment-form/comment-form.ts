@@ -52,6 +52,9 @@ export class CommentForm implements OnInit {
   protected readonly message = signal<string | null>(null);
   protected readonly serverError = signal<string | null>(null);
 
+  // it is kept apart from the field, because the field is cleared when a new picture is loaded
+  protected readonly captchaError = signal<string | null>(null);
+
   protected readonly previewOpen = signal(false);
   protected readonly previewHtml = signal('');
   protected readonly previewError = signal<string | null>(null);
@@ -71,7 +74,12 @@ export class CommentForm implements OnInit {
     this.loadCaptcha();
   }
 
-  protected loadCaptcha(): void {
+  protected refreshCaptcha(): void {
+    this.captchaError.set(null);
+    this.loadCaptcha();
+  }
+
+  private loadCaptcha(): void {
     this.commentsService.getCaptcha().subscribe({
       next: captcha => {
         this.captcha.set(captcha);
@@ -185,6 +193,7 @@ export class CommentForm implements OnInit {
   protected submit(): void {
     this.message.set(null);
     this.serverError.set(null);
+    this.captchaError.set(null);
 
     this.form.markAllAsTouched();
     if (this.form.invalid || this.fileError() || !this.captcha()) {
@@ -241,7 +250,9 @@ export class CommentForm implements OnInit {
       const name = key.charAt(0).toLowerCase() + key.slice(1);
       const control = this.form.get(name);
 
-      if (control) {
+      if (name === 'captchaCode' || name === 'captchaId') {
+        this.captchaError.set(messages[0]);
+      } else if (control) {
         control.setErrors({ server: messages[0] });
         control.markAsTouched();
       } else if (name === 'file') {

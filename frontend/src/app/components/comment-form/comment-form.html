@@ -70,10 +70,12 @@
       @if (captcha(); as current) {
         <img [src]="current.image" width="170" height="60" alt="CAPTCHA">
       }
-      <button type="button" class="secondary" (click)="loadCaptcha()">Обновить</button>
+      <button type="button" class="secondary" (click)="refreshCaptcha()">Обновить</button>
       <input id="captchaCode" type="text" formControlName="captchaCode" autocomplete="off" placeholder="Код с картинки">
     </div>
-    @if (showError('captchaCode')) {
+    @if (captchaError()) {
+      <div class="error">{{ captchaError() }} Введите код с новой картинки.</div>
+    } @else if (showError('captchaCode')) {
       <div class="error">{{ errorText('captchaCode') }}</div>
     }
   </div>
