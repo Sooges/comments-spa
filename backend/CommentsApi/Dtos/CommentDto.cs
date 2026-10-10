@@ -9,5 +9,6 @@ public class CommentDto
     public string? HomePage { get; set; }
     public string Text { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public AttachmentDto? Attachment { get; set; }
     public List<CommentDto> Replies { get; set; } = new();
 }

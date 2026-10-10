@@ -16,6 +16,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
 
+builder.Services.AddSingleton<IFileStorage, FileStorage>();
+builder.Services.AddSingleton<IAttachmentProcessor, AttachmentProcessor>();
+
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICaptchaService, CaptchaService>();
 

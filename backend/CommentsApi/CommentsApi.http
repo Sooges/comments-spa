@@ -20,28 +20,71 @@ Content-Type: application/json
   "text": "Hello <strong>world</strong> <a href=\"https://example.com\" title=\"Site\">link</a>"
 }
 
-### Add a top-level comment (use the id of a fresh captcha and the code from its picture)
+### Add a top-level comment, the data is sent as a form
+### (use the id of a fresh captcha and the code from its picture)
 POST {{CommentsApi_HostAddress}}/api/comments
-Content-Type: application/json
+Content-Type: multipart/form-data; boundary=WebKitFormBoundary
 
-{
-  "userName": "john",
-  "email": "john@example.com",
-  "homePage": "https://example.com",
-  "text": "First comment",
-  "captchaId": "<captcha id>",
-  "captchaCode": "<code from the picture>"
-}
+--WebKitFormBoundary
+Content-Disposition: form-data; name="userName"
 
-### Reply to the comment with id 1
+john
+--WebKitFormBoundary
+Content-Disposition: form-data; name="email"
+
+john@example.com
+--WebKitFormBoundary
+Content-Disposition: form-data; name="homePage"
+
+https://example.com
+--WebKitFormBoundary
+Content-Disposition: form-data; name="text"
+
+First comment
+--WebKitFormBoundary
+Content-Disposition: form-data; name="captchaId"
+
+<captcha id>
+--WebKitFormBoundary
+Content-Disposition: form-data; name="captchaCode"
+
+<code from the picture>
+--WebKitFormBoundary--
+
+### Reply to the comment with id 1 and attach a picture (JPG, GIF, PNG) or a text file (TXT)
 POST {{CommentsApi_HostAddress}}/api/comments
-Content-Type: application/json
+Content-Type: multipart/form-data; boundary=WebKitFormBoundary
 
-{
-  "userName": "mary",
-  "email": "mary@example.com",
-  "text": "A reply",
-  "parentId": 1,
-  "captchaId": "<captcha id>",
-  "captchaCode": "<code from the picture>"
-}
+--WebKitFormBoundary
+Content-Disposition: form-data; name="userName"
+
+mary
+--WebKitFormBoundary
+Content-Disposition: form-data; name="email"
+
+mary@example.com
+--WebKitFormBoundary
+Content-Disposition: form-data; name="text"
+
+A reply with a picture
+--WebKitFormBoundary
+Content-Disposition: form-data; name="parentId"
+
+1
+--WebKitFormBoundary
+Content-Disposition: form-data; name="captchaId"
+
+<captcha id>
+--WebKitFormBoundary
+Content-Disposition: form-data; name="captchaCode"
+
+<code from the picture>
+--WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="photo.jpg"
+Content-Type: image/jpeg
+
+< ./photo.jpg
+--WebKitFormBoundary--
+
+### Get an attachment by its id (from the "attachment" field of a comment)
+GET {{CommentsApi_HostAddress}}/api/attachments/1

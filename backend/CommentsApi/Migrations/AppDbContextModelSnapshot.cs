@@ -22,6 +22,54 @@ namespace CommentsApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CommentsApi.Models.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId")
+                        .IsUnique();
+
+                    b.ToTable("Attachments");
+                });
+
             modelBuilder.Entity("CommentsApi.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
@@ -78,6 +126,17 @@ namespace CommentsApi.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("CommentsApi.Models.Attachment", b =>
+                {
+                    b.HasOne("CommentsApi.Models.Comment", "Comment")
+                        .WithOne("Attachment")
+                        .HasForeignKey("CommentsApi.Models.Attachment", "CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+                });
+
             modelBuilder.Entity("CommentsApi.Models.Comment", b =>
                 {
                     b.HasOne("CommentsApi.Models.Comment", "Parent")
@@ -90,6 +149,8 @@ namespace CommentsApi.Migrations
 
             modelBuilder.Entity("CommentsApi.Models.Comment", b =>
                 {
+                    b.Navigation("Attachment");
+
                     b.Navigation("Replies");
                 });
 #pragma warning restore 612, 618
