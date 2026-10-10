@@ -1,5 +1,6 @@
 using CommentsApi.Data;
 using CommentsApi.Dtos;
+using CommentsApi.Events;
 using CommentsApi.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,11 +13,15 @@ public class CommentService : ICommentService
 
     private readonly AppDbContext _db;
     private readonly IFileStorage _fileStorage;
+    private readonly ICommentEvents _events;
+    private readonly ICommentCache _cache;
 
-    public CommentService(AppDbContext db, IFileStorage fileStorage)
+    public CommentService(AppDbContext db, IFileStorage fileStorage, ICommentEvents events, ICommentCache cache)
     {
         _db = db;
         _fileStorage = fileStorage;
+        _events = events;
+        _cache = cache;
     }
 
     public async Task<CommentDto?> CreateAsync(
@@ -80,10 +85,17 @@ public class CommentService : ICommentService
             throw;
         }
 
+        _events.RaiseCommentCreated(comment.Id, comment.ParentId);
+
         return ToDto(comment);
     }
 
-    public async Task<PagedResult<CommentDto>> GetPageAsync(CommentQuery query)
+    public Task<PagedResult<CommentDto>> GetPageAsync(CommentQuery query)
+    {
+        return _cache.GetOrCreateAsync(query, () => LoadPageAsync(query));
+    }
+
+    private async Task<PagedResult<CommentDto>> LoadPageAsync(CommentQuery query)
     {
         var topLevel = _db.Comments
             .AsNoTracking()

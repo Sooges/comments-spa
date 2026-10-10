@@ -1,5 +1,9 @@
 using CommentsApi.Data;
+using CommentsApi.Events;
+using CommentsApi.Hubs;
+using CommentsApi.Queue;
 using CommentsApi.Services;
+using CommentsApi.Workers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +17,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
+builder.Services.AddSingleton<ICommentEvents, CommentEvents>();
+builder.Services.AddSingleton<ICommentCache, CommentCache>();
+builder.Services.AddSingleton<CommentEventSubscriber>();
+builder.Services.AddSingleton<INotificationQueue, NotificationQueue>();
+builder.Services.AddHostedService<NotificationWorker>();
+
+builder.Services.AddSignalR();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
 
@@ -23,6 +34,9 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICaptchaService, CaptchaService>();
 
 var app = builder.Build();
+
+// The subscriber starts to listen to the comment events as soon as it is created
+app.Services.GetRequiredService<CommentEventSubscriber>();
 
 // Create the database and apply pending migrations on startup
 using (var scope = app.Services.CreateScope())
@@ -40,5 +54,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<CommentsHub>("/hubs/comments");
 
 app.Run();
