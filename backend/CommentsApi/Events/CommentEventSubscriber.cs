@@ -1,3 +1,4 @@
+using CommentsApi.Queue;
 using CommentsApi.Services;
 
 namespace CommentsApi.Events;
@@ -6,10 +7,12 @@ namespace CommentsApi.Events;
 public class CommentEventSubscriber
 {
     private readonly ICommentCache _cache;
+    private readonly INotificationQueue _queue;
 
-    public CommentEventSubscriber(ICommentEvents events, ICommentCache cache)
+    public CommentEventSubscriber(ICommentEvents events, ICommentCache cache, INotificationQueue queue)
     {
         _cache = cache;
+        _queue = queue;
 
         events.CommentCreated += OnCommentCreated;
     }
@@ -18,5 +21,9 @@ public class CommentEventSubscriber
     {
         // the cached pages do not have the new comment, so they are removed at once
         _cache.Clear();
+
+        // the other users are told about the comment later, by the background worker,
+        // so the request of the author does not wait for it
+        _queue.Enqueue(new CommentNotification { CommentId = e.CommentId, ParentId = e.ParentId });
     }
 }
