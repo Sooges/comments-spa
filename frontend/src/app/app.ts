@@ -1,11 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
+import { CommentForm } from './components/comment-form/comment-form';
 
 @Component({
-  imports: [],
+  imports: [CommentForm],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('frontend');
 }

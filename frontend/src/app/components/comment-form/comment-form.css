@@ -1,0 +1,127 @@
+.comment-form {
+  background: #ffffff;
+  border: 1px solid #e0e3e8;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.row .field {
+  flex: 1 1 200px;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='url'],
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #c5cad3;
+  border-radius: 6px;
+  font: inherit;
+}
+
+input:focus,
+textarea:focus {
+  outline: 2px solid #9ec5fe;
+  border-color: #6ea8fe;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.ng-invalid.ng-touched,
+.ng-invalid.ng-dirty {
+  border-color: #dc3545;
+}
+
+.hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.error {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #dc3545;
+}
+
+.success {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #198754;
+}
+
+.captcha-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.captcha-row img {
+  border: 1px solid #c5cad3;
+  border-radius: 6px;
+}
+
+.captcha-row input {
+  flex: 1 1 160px;
+  max-width: 220px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #0d6efd;
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #0b5ed7;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button.secondary {
+  background: #e9ecef;
+  color: #212529;
+}
+
+button.secondary:hover:not(:disabled) {
+  background: #dde1e5;
+}
