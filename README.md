@@ -12,7 +12,7 @@ SPA-приложение «Комментарии»: пользователи о
 - [x] API комментариев: создание, ответы, список с сортировкой и пагинацией
 - [x] Валидация, фильтр HTML-тегов, защита от XSS, CAPTCHA
 - [x] Загрузка картинок и текстовых файлов
-- [ ] Интерфейс на Angular
+- [ ] Интерфейс на Angular (готово: форма с проверкой, панель тегов, предпросмотр, CAPTCHA; в работе: список комментариев)
 - [ ] Очередь, кэш, события, WebSocket (SignalR)
 - [ ] Docker-образ всего приложения, схема БД
 
@@ -28,13 +28,19 @@ backend/
     Models/        сущности базы данных
     Data/          DbContext и настройка таблиц
     Migrations/    миграции EF Core
+frontend/
+  src/app/
+    components/    компоненты (форма комментария)
+    services/      запросы к API
+    models/        типы данных
+    validators/    проверки на стороне клиента
 docker-compose.yml   SQL Server для разработки
 .env.example         пример настроек окружения
 ```
 
 ## Запуск для разработки
 
-Нужны: .NET 10 SDK и Docker.
+Нужны: .NET 10 SDK, Node.js 22 и Docker.
 
 1. Создать файл окружения:
 
@@ -55,6 +61,16 @@ docker-compose.yml   SQL Server для разработки
    ```
 
 API будет доступен на `http://localhost:5154`. Примеры запросов лежат в `backend/CommentsApi/CommentsApi.http`.
+
+4. Запустить интерфейс (в другом окне терминала):
+
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+
+Страница откроется на `http://localhost:4200`. Запросы к `/api` dev-сервер Angular передаёт на API (настройка в `frontend/proxy.conf.json`).
 
 > Пароль в `.env.example` предназначен только для локальной разработки. Для сервера его нужно заменить.
 
