@@ -26,6 +26,9 @@ public class CreateCommentRequest
     // id of the comment we reply to, null for a new top-level comment
     public int? ParentId { get; set; }
 
+    // an image or a text file, it is checked by IAttachmentProcessor
+    public IFormFile? File { get; set; }
+
     [Required(ErrorMessage = "Не удалось получить CAPTCHA, обновите картинку.")]
     public string CaptchaId { get; set; } = string.Empty;
 

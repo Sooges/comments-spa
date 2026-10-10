@@ -11,13 +11,19 @@ public class CommentService : ICommentService
     private const int MaxUserAgentLength = 512;
 
     private readonly AppDbContext _db;
+    private readonly IFileStorage _fileStorage;
 
-    public CommentService(AppDbContext db)
+    public CommentService(AppDbContext db, IFileStorage fileStorage)
     {
         _db = db;
+        _fileStorage = fileStorage;
     }
 
-    public async Task<CommentDto?> CreateAsync(CreateCommentRequest request, string ipAddress, string userAgent)
+    public async Task<CommentDto?> CreateAsync(
+        CreateCommentRequest request,
+        PreparedAttachment? attachment,
+        string ipAddress,
+        string userAgent)
     {
         if (request.ParentId != null)
         {
@@ -40,8 +46,39 @@ public class CommentService : ICommentService
             UserAgent = userAgent.Length > MaxUserAgentLength ? userAgent[..MaxUserAgentLength] : userAgent
         };
 
+        string? storedFileName = null;
+        if (attachment != null)
+        {
+            storedFileName = await _fileStorage.SaveAsync(attachment.Content, attachment.Extension);
+
+            comment.Attachment = new Attachment
+            {
+                Kind = attachment.Kind,
+                FileName = attachment.OriginalName,
+                StoredFileName = storedFileName,
+                ContentType = attachment.ContentType,
+                Size = attachment.Content.Length,
+                Width = attachment.Width,
+                Height = attachment.Height
+            };
+        }
+
         _db.Comments.Add(comment);
-        await _db.SaveChangesAsync();
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch
+        {
+            // do not leave a file without a comment
+            if (storedFileName != null)
+            {
+                _fileStorage.Delete(storedFileName);
+            }
+
+            throw;
+        }
 
         return ToDto(comment);
     }
@@ -55,6 +92,7 @@ public class CommentService : ICommentService
         var totalCount = await topLevel.CountAsync();
 
         var comments = await ApplySorting(topLevel, query)
+            .Include(c => c.Attachment)
             .Skip((query.Page - 1) * PageSize)
             .Take(PageSize)
             .ToListAsync();
@@ -82,6 +120,7 @@ public class CommentService : ICommentService
 
             var replies = await _db.Comments
                 .AsNoTracking()
+                .Include(c => c.Attachment)
                 .Where(c => c.ParentId != null && parentIds.Contains(c.ParentId.Value))
                 .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
                 .ToListAsync();
@@ -129,7 +168,21 @@ public class CommentService : ICommentService
             Email = comment.Email,
             HomePage = comment.HomePage,
             Text = comment.Text,
-            CreatedAt = comment.CreatedAt
+            CreatedAt = comment.CreatedAt,
+            Attachment = comment.Attachment == null ? null : ToDto(comment.Attachment)
+        };
+    }
+
+    private static AttachmentDto ToDto(Attachment attachment)
+    {
+        return new AttachmentDto
+        {
+            Id = attachment.Id,
+            Kind = attachment.Kind.ToString().ToLowerInvariant(),
+            FileName = attachment.FileName,
+            Size = attachment.Size,
+            Width = attachment.Width,
+            Height = attachment.Height
         };
     }
 }
