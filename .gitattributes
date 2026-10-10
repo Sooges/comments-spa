@@ -1,0 +1,5 @@
+* text=auto
+
+# these files are used in Linux containers, so they must have LF line endings
+Dockerfile text eol=lf
+*.conf text eol=lf
