@@ -1,0 +1,58 @@
+<div class="node">
+  @if (showHeader()) {
+    <div class="header">
+      <span class="avatar" [style.background-color]="color()">{{ initials() }}</span>
+      <strong class="author">{{ comment().userName }}</strong>
+      <span class="date">{{ comment().createdAt | date: 'dd.MM.yy в HH:mm' }}</span>
+      <span class="email">{{ comment().email }}</span>
+      @if (comment().homePage) {
+        <a class="site" [href]="comment().homePage" target="_blank" rel="noopener noreferrer">сайт</a>
+      }
+    </div>
+  }
+
+  <div class="content">
+    @if (quote()) {
+      <div class="quote">{{ quote() }}</div>
+    }
+
+    <div class="comment-text" [innerHTML]="comment().text"></div>
+
+    @if (comment().attachment; as file) {
+      <div class="attachment">
+        @if (file.kind === 'image') {
+          <img
+            class="thumb"
+            [src]="getFileUrl(file)"
+            [alt]="file.fileName"
+            [attr.width]="file.width"
+            [attr.height]="file.height"
+            title="Нажмите, чтобы открыть"
+            (click)="openImage(file)">
+        } @else {
+          <button type="button" class="file-link" (click)="openText(file)">
+            {{ file.fileName }} ({{ file.size }} Б)
+          </button>
+        }
+      </div>
+    }
+
+    <div class="actions">
+      <button type="button" class="link" (click)="replying.set(!replying())">
+        {{ replying() ? 'Отмена' : 'Ответить' }}
+      </button>
+    </div>
+
+    @if (replying()) {
+      <app-comment-form [parentId]="comment().id" (created)="onReplied()" (cancelled)="replying.set(false)" />
+    }
+  </div>
+
+  @if (comment().replies.length > 0) {
+    <div class="replies">
+      @for (reply of comment().replies; track reply.id) {
+        <app-comment-node [comment]="reply" [parent]="comment()" (changed)="changed.emit()" />
+      }
+    </div>
+  }
+</div>

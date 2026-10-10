@@ -1,0 +1,96 @@
+<form class="comment-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <h2>{{ parentId() === null ? 'Новый комментарий' : 'Ответ на комментарий' }}</h2>
+
+  <div class="row">
+    <div class="field">
+      <label for="userName">User Name *</label>
+      <input id="userName" type="text" formControlName="userName" autocomplete="nickname">
+      @if (showError('userName')) {
+        <div class="error">{{ errorText('userName') }}</div>
+      }
+    </div>
+
+    <div class="field">
+      <label for="email">E-mail *</label>
+      <input id="email" type="email" formControlName="email" autocomplete="email">
+      @if (showError('email')) {
+        <div class="error">{{ errorText('email') }}</div>
+      }
+    </div>
+
+    <div class="field">
+      <label for="homePage">Home page</label>
+      <input id="homePage" type="url" formControlName="homePage" placeholder="https://">
+      @if (showError('homePage')) {
+        <div class="error">{{ errorText('homePage') }}</div>
+      }
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="text">Text *</label>
+    <div class="toolbar">
+      <button type="button" class="secondary" title="Курсив" (click)="insertTag('i')">[i]</button>
+      <button type="button" class="secondary" title="Жирный" (click)="insertTag('strong')">[strong]</button>
+      <button type="button" class="secondary" title="Код" (click)="insertTag('code')">[code]</button>
+      <button type="button" class="secondary" title="Ссылка" (click)="insertTag('a')">[a]</button>
+      <button type="button" class="secondary preview-button" (click)="togglePreview()">
+        {{ previewOpen() ? 'Скрыть предпросмотр' : 'Предпросмотр' }}
+      </button>
+    </div>
+    <textarea #textArea id="text" rows="6" formControlName="text"></textarea>
+    @if (showError('text')) {
+      <div class="error">{{ errorText('text') }}</div>
+    }
+
+    @if (previewOpen()) {
+      <div class="preview">
+        <div class="preview-title">Так будет выглядеть комментарий:</div>
+        @if (previewError()) {
+          <div class="error">{{ previewError() }}</div>
+        } @else {
+          <div class="comment-text" [innerHTML]="previewHtml()"></div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="field">
+    <label for="file">Файл</label>
+    <input #fileInput id="file" type="file" accept=".jpg,.jpeg,.png,.gif,.txt" (change)="onFileChange($event)">
+    <div class="hint">Картинка JPG, GIF, PNG (если больше 320×240, будет уменьшена) или текстовый файл TXT до 100 КБ.</div>
+    @if (fileError()) {
+      <div class="error">{{ fileError() }}</div>
+    }
+  </div>
+
+  <div class="field captcha">
+    <label for="captchaCode">CAPTCHA *</label>
+    <div class="captcha-row">
+      @if (captcha(); as current) {
+        <img [src]="current.image" width="170" height="60" alt="CAPTCHA">
+      }
+      <button type="button" class="secondary" (click)="refreshCaptcha()">Обновить</button>
+      <input id="captchaCode" type="text" formControlName="captchaCode" autocomplete="off" placeholder="Код с картинки">
+    </div>
+    @if (captchaError()) {
+      <div class="error">{{ captchaError() }} Введите код с новой картинки.</div>
+    } @else if (showError('captchaCode')) {
+      <div class="error">{{ errorText('captchaCode') }}</div>
+    }
+  </div>
+
+  @if (serverError()) {
+    <div class="error">{{ serverError() }}</div>
+  }
+  @if (message()) {
+    <div class="success">{{ message() }}</div>
+  }
+
+  <div class="buttons">
+    <button type="submit" [disabled]="submitting()">{{ submitting() ? 'Отправка...' : 'Отправить' }}</button>
+    @if (parentId() !== null) {
+      <button type="button" class="secondary" (click)="cancelled.emit()">Отмена</button>
+    }
+  </div>
+</form>

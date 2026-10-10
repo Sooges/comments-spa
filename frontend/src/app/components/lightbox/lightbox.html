@@ -1,0 +1,15 @@
+@if (lightbox.content(); as content) {
+  <div class="backdrop" (click)="lightbox.close()">
+    <figure class="box" role="dialog" aria-modal="true" [attr.aria-label]="content.caption" (click)="$event.stopPropagation()">
+      <button type="button" class="close" aria-label="Закрыть" (click)="lightbox.close()">×</button>
+
+      @if (content.kind === 'image') {
+        <img class="image" [src]="content.url" [alt]="content.caption">
+      } @else {
+        <pre class="text">{{ content.text }}</pre>
+      }
+
+      <figcaption>{{ content.caption }}</figcaption>
+    </figure>
+  </div>
+}

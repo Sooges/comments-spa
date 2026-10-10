@@ -1,0 +1,67 @@
+<section class="comment-list">
+  <h2>
+    Комментарии
+    @if (result(); as current) {
+      <span class="count">({{ current.totalCount }})</span>
+    }
+  </h2>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  @if (result(); as current) {
+    @if (current.items.length === 0) {
+      <p class="empty">Комментариев пока нет. Напишите первый!</p>
+    } @else {
+      <table class="comments-table" [class.loading]="loading()">
+        <thead>
+          <tr>
+            <th [attr.aria-sort]="ariaSort('userName')">
+              <button type="button" (click)="sort('userName')">User Name {{ arrow('userName') }}</button>
+            </th>
+            <th [attr.aria-sort]="ariaSort('email')">
+              <button type="button" (click)="sort('email')">E-mail {{ arrow('email') }}</button>
+            </th>
+            <th [attr.aria-sort]="ariaSort('date')">
+              <button type="button" (click)="sort('date')">Дата добавления {{ arrow('date') }}</button>
+            </th>
+          </tr>
+        </thead>
+
+        @for (comment of current.items; track comment.id) {
+          <tbody>
+            <tr class="head-row">
+              <td>
+                <span class="avatar" [style.background-color]="color(comment.userName)">{{ initials(comment.userName) }}</span>
+                <strong>{{ comment.userName }}</strong>
+                @if (comment.homePage) {
+                  <a class="site" [href]="comment.homePage" target="_blank" rel="noopener noreferrer">сайт</a>
+                }
+              </td>
+              <td class="email">{{ comment.email }}</td>
+              <td class="date">{{ comment.createdAt | date: 'dd.MM.yy в HH:mm' }}</td>
+            </tr>
+            <tr class="body-row">
+              <td colspan="3">
+                <app-comment-node [comment]="comment" [showHeader]="false" (changed)="reload()" />
+              </td>
+            </tr>
+          </tbody>
+        }
+      </table>
+
+      @if (current.totalPages > 1) {
+        <nav class="pagination" aria-label="Страницы">
+          <button type="button" [disabled]="current.page === 1" (click)="goToPage(current.page - 1)">←</button>
+          @for (number of pageNumbers(); track number) {
+            <button type="button" [class.active]="number === current.page" (click)="goToPage(number)">{{ number }}</button>
+          }
+          <button type="button" [disabled]="current.page === current.totalPages" (click)="goToPage(current.page + 1)">→</button>
+        </nav>
+      }
+    }
+  } @else if (loading()) {
+    <p class="empty">Загрузка...</p>
+  }
+</section>
