@@ -16,6 +16,9 @@ public class Comment
     public string Text { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 
+    // an image or a text file, a comment has not more than one
+    public Attachment? Attachment { get; set; }
+
     // data that helps to identify the client
     public string IpAddress { get; set; } = string.Empty;
     public string UserAgent { get; set; } = string.Empty;
