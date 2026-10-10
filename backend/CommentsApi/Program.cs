@@ -1,5 +1,6 @@
 using CommentsApi.Data;
 using CommentsApi.Events;
+using CommentsApi.Queue;
 using CommentsApi.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddSingleton<ICommentEvents, CommentEvents>();
 builder.Services.AddSingleton<ICommentCache, CommentCache>();
 builder.Services.AddSingleton<CommentEventSubscriber>();
+builder.Services.AddSingleton<INotificationQueue, NotificationQueue>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
 
