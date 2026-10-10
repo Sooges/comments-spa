@@ -1,7 +1,9 @@
 using CommentsApi.Data;
 using CommentsApi.Events;
+using CommentsApi.Hubs;
 using CommentsApi.Queue;
 using CommentsApi.Services;
+using CommentsApi.Workers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,9 @@ builder.Services.AddSingleton<ICommentEvents, CommentEvents>();
 builder.Services.AddSingleton<ICommentCache, CommentCache>();
 builder.Services.AddSingleton<CommentEventSubscriber>();
 builder.Services.AddSingleton<INotificationQueue, NotificationQueue>();
+builder.Services.AddHostedService<NotificationWorker>();
+
+builder.Services.AddSignalR();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddSingleton<IHtmlTextProcessor, HtmlTextProcessor>();
 
@@ -49,5 +54,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<CommentsHub>("/hubs/comments");
 
 app.Run();
