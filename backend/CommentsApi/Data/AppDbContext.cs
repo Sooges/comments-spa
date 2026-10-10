@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Attachment> Attachments => Set<Attachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,22 @@ public class AppDbContext : DbContext
             entity.HasIndex(c => c.CreatedAt);
             entity.HasIndex(c => c.UserName);
             entity.HasIndex(c => c.Email);
+        });
+
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.Property(a => a.Kind).HasConversion<string>().HasMaxLength(20);
+            entity.Property(a => a.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(a => a.StoredFileName).IsRequired().HasMaxLength(100);
+            entity.Property(a => a.ContentType).IsRequired().HasMaxLength(100);
+
+            // one attachment per comment, it is removed together with the comment
+            entity.HasOne(a => a.Comment)
+                .WithOne(c => c.Attachment)
+                .HasForeignKey<Attachment>(a => a.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => a.CommentId).IsUnique();
         });
     }
 }
