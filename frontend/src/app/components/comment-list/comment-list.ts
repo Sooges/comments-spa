@@ -1,6 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs';
 import { Comment, PagedResult, SortField, SortOrder } from '../../models/comment.model';
+import { CommentsHubService } from '../../services/comments-hub.service';
 import { CommentsService } from '../../services/comments.service';
 import { getAvatarColor, getInitials } from '../../utils/comment-view';
 import { CommentNode } from '../comment-node/comment-node';
@@ -16,6 +19,8 @@ const PAGE_BUTTONS_AROUND = 3;
 })
 export class CommentList implements OnInit {
   private readonly commentsService = inject(CommentsService);
+  private readonly hub = inject(CommentsHubService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // the newest comments go first by default (LIFO)
   protected readonly sortBy = signal<SortField>('date');
@@ -42,6 +47,13 @@ export class CommentList implements OnInit {
 
   ngOnInit(): void {
     this.load();
+
+    // When somebody adds a comment, the server tells it over the WebSocket and the list is loaded again.
+    // The delay is for the case when several comments come one after another.
+    this.hub.commentAdded$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.load());
+    this.hub.start();
   }
 
   // loads the list again, for example after a new comment was added
