@@ -29,9 +29,29 @@
 
   <div class="field">
     <label for="text">Text *</label>
-    <textarea id="text" rows="6" formControlName="text"></textarea>
+    <div class="toolbar">
+      <button type="button" class="secondary" title="Курсив" (click)="insertTag('i')">[i]</button>
+      <button type="button" class="secondary" title="Жирный" (click)="insertTag('strong')">[strong]</button>
+      <button type="button" class="secondary" title="Код" (click)="insertTag('code')">[code]</button>
+      <button type="button" class="secondary" title="Ссылка" (click)="insertTag('a')">[a]</button>
+      <button type="button" class="secondary preview-button" (click)="togglePreview()">
+        {{ previewOpen() ? 'Скрыть предпросмотр' : 'Предпросмотр' }}
+      </button>
+    </div>
+    <textarea #textArea id="text" rows="6" formControlName="text"></textarea>
     @if (showError('text')) {
       <div class="error">{{ errorText('text') }}</div>
+    }
+
+    @if (previewOpen()) {
+      <div class="preview">
+        <div class="preview-title">Так будет выглядеть комментарий:</div>
+        @if (previewError()) {
+          <div class="error">{{ previewError() }}</div>
+        } @else {
+          <div class="comment-text" [innerHTML]="previewHtml()"></div>
+        }
+      </div>
     }
   </div>
 

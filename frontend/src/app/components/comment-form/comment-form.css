@@ -58,6 +58,48 @@ textarea {
   border-color: #dc3545;
 }
 
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.toolbar button {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.toolbar .preview-button {
+  margin-left: auto;
+}
+
+.preview {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border: 1px dashed #c5cad3;
+  border-radius: 6px;
+}
+
+.preview-title {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.comment-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.comment-text code {
+  padding: 1px 4px;
+  background: #e9ecef;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+}
+
 .hint {
   margin-top: 4px;
   font-size: 12px;

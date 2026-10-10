@@ -1,10 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime } from 'rxjs';
 import { Captcha } from '../../models/comment.model';
 import { CommentsService } from '../../services/comments.service';
 import { checkFile } from '../../validators/file.validator';
-import { htmlTextValidator } from '../../validators/html-text.validator';
+import { checkHtmlText, htmlTextValidator } from '../../validators/html-text.validator';
 
 type FieldName = 'userName' | 'email' | 'homePage' | 'text' | 'captchaCode';
 
@@ -33,6 +35,7 @@ export class CommentForm implements OnInit {
   readonly cancelled = output<void>();
 
   private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
+  private readonly textArea = viewChild.required<ElementRef<HTMLTextAreaElement>>('textArea');
 
   protected readonly form = this.fb.nonNullable.group({
     userName: ['', [Validators.required, Validators.maxLength(50), Validators.pattern(/^[a-zA-Z0-9]+$/)]],
@@ -49,6 +52,21 @@ export class CommentForm implements OnInit {
   protected readonly message = signal<string | null>(null);
   protected readonly serverError = signal<string | null>(null);
 
+  protected readonly previewOpen = signal(false);
+  protected readonly previewHtml = signal('');
+  protected readonly previewError = signal<string | null>(null);
+
+  constructor() {
+    // while the preview is open it follows the text, but not on every key press
+    this.form.controls.text.valueChanges
+      .pipe(debounceTime(400), takeUntilDestroyed())
+      .subscribe(() => {
+        if (this.previewOpen()) {
+          this.loadPreview();
+        }
+      });
+  }
+
   ngOnInit(): void {
     this.loadCaptcha();
   }
@@ -60,6 +78,69 @@ export class CommentForm implements OnInit {
         this.form.controls.captchaCode.reset();
       },
       error: () => this.serverError.set('Не удалось загрузить CAPTCHA. Попробуйте обновить картинку.')
+    });
+  }
+
+  // wraps the selected text in a tag, or puts an empty tag at the cursor
+  protected insertTag(tag: 'i' | 'strong' | 'code' | 'a'): void {
+    const textarea = this.textArea().nativeElement;
+    const control = this.form.controls.text;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    let openTag = `<${tag}>`;
+    if (tag === 'a') {
+      const href = window.prompt('Адрес ссылки (http:// или https://)', 'https://');
+      if (!href) {
+        return;
+      }
+      // quotes and brackets would break the tag
+      const safeHref = href.trim().replace(/["<>]/g, char => encodeURIComponent(char));
+      openTag = `<a href="${safeHref}" title="">`;
+    }
+
+    const value = control.value;
+    control.setValue(
+      value.substring(0, start) + openTag + value.substring(start, end) + `</${tag}>` + value.substring(end)
+    );
+    control.markAsDirty();
+
+    // the cursor goes right after the selected text, before the closing tag
+    const cursor = start + openTag.length + (end - start);
+    textarea.focus();
+    textarea.setSelectionRange(cursor, cursor);
+  }
+
+  protected togglePreview(): void {
+    this.previewOpen.update(open => !open);
+    if (this.previewOpen()) {
+      this.loadPreview();
+    }
+  }
+
+  private loadPreview(): void {
+    const text = this.form.controls.text.value;
+
+    if (!text.trim()) {
+      this.previewHtml.set('');
+      this.previewError.set(null);
+      return;
+    }
+
+    const error = checkHtmlText(text);
+    if (error) {
+      this.previewError.set(error);
+      return;
+    }
+
+    // the server builds the same HTML that will be saved, so the preview shows the real result
+    this.commentsService.preview(text).subscribe({
+      next: response => {
+        this.previewError.set(null);
+        this.previewHtml.set(response.html);
+      },
+      error: (error: HttpErrorResponse) =>
+        this.previewError.set(error.error?.errors?.Text?.[0] ?? 'Не удалось получить предпросмотр.')
     });
   }
 
@@ -176,6 +257,8 @@ export class CommentForm implements OnInit {
     this.file.set(null);
     this.fileError.set(null);
     this.fileInput().nativeElement.value = '';
+    this.previewOpen.set(false);
+    this.previewHtml.set('');
     this.loadCaptcha();
   }
 }
