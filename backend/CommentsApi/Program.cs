@@ -4,6 +4,7 @@ using CommentsApi.Hubs;
 using CommentsApi.Queue;
 using CommentsApi.Services;
 using CommentsApi.Workers;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,16 @@ builder.Services.AddSingleton<IAttachmentProcessor, AttachmentProcessor>();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICaptchaService, CaptchaService>();
 
+// In Docker the API works behind the nginx of the web container, and the real address of the client
+// comes in the X-Forwarded-For header. The port of the API is not open outside of the Docker network,
+// so the header can be trusted.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 // The subscriber starts to listen to the comment events as soon as it is created
@@ -50,6 +61,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseForwardedHeaders();
 
 app.UseAuthorization();
 

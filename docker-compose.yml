@@ -1,3 +1,5 @@
+name: comments-spa
+
 services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -7,7 +9,8 @@ services:
       MSSQL_PID: "Express"
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
     ports:
-      - "1433:1433"
+      # only for the local computer, it is used when the API is started without Docker
+      - "127.0.0.1:1433:1433"
     volumes:
       - mssql-data:/var/opt/mssql
     healthcheck:
@@ -16,6 +19,31 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    container_name: comments-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Server=db,1433;Database=CommentsDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Storage__UploadsPath: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    container_name: comments-web
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   mssql-data:
+  uploads:
