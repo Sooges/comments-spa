@@ -9,6 +9,10 @@ namespace CommentsApi.Services;
 public class CommentService : ICommentService
 {
     private const int PageSize = 25;
+
+    // Replies can be nested very deep, but not without a limit: the whole tree is sent to the browser
+    // as one JSON, and a too deep tree can not be written (see MaxDepth in Program.cs).
+    private const int MaxReplyDepth = 100;
     private const int MaxUserAgentLength = 512;
 
     private readonly AppDbContext _db;
@@ -24,7 +28,7 @@ public class CommentService : ICommentService
         _cache = cache;
     }
 
-    public async Task<CommentDto?> CreateAsync(
+    public async Task<CreateCommentResult> CreateAsync(
         CreateCommentRequest request,
         PreparedAttachment? attachment,
         string ipAddress,
@@ -32,10 +36,15 @@ public class CommentService : ICommentService
     {
         if (request.ParentId != null)
         {
-            var parentExists = await _db.Comments.AnyAsync(c => c.Id == request.ParentId);
-            if (!parentExists)
+            var parentDepth = await GetDepthAsync(request.ParentId.Value);
+            if (parentDepth < 0)
             {
-                return null;
+                return CreateCommentResult.Failed(CreateCommentError.ParentNotFound);
+            }
+
+            if (parentDepth >= MaxReplyDepth)
+            {
+                return CreateCommentResult.Failed(CreateCommentError.TooDeep);
             }
         }
 
@@ -87,7 +96,38 @@ public class CommentService : ICommentService
 
         _events.RaiseCommentCreated(comment.Id, comment.ParentId);
 
-        return ToDto(comment);
+        return CreateCommentResult.Created(ToDto(comment));
+    }
+
+    // How deep the comment is: 0 for a top-level comment, 1 for a reply to it and so on.
+    // Returns -1 if there is no such comment.
+    private async Task<int> GetDepthAsync(int commentId)
+    {
+        var depth = 0;
+        int? currentId = commentId;
+
+        // we go up to the top-level comment, one query for every step
+        while (true)
+        {
+            var parentIds = await _db.Comments
+                .AsNoTracking()
+                .Where(c => c.Id == currentId)
+                .Select(c => new { c.ParentId })
+                .ToListAsync();
+
+            if (parentIds.Count == 0)
+            {
+                return -1;
+            }
+
+            if (parentIds[0].ParentId == null || depth >= MaxReplyDepth)
+            {
+                return depth;
+            }
+
+            depth++;
+            currentId = parentIds[0].ParentId;
+        }
     }
 
     public Task<PagedResult<CommentDto>> GetPageAsync(CommentQuery query)

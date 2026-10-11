@@ -86,13 +86,19 @@ public class CommentsController : ControllerBase
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         var userAgent = Request.Headers.UserAgent.ToString();
 
-        var comment = await _commentService.CreateAsync(request, attachment, ipAddress, userAgent);
-        if (comment == null)
+        var result = await _commentService.CreateAsync(request, attachment, ipAddress, userAgent);
+        if (result.Error == CreateCommentError.ParentNotFound)
         {
-            ModelState.AddModelError(nameof(request.ParentId), "Parent comment not found.");
+            ModelState.AddModelError(nameof(request.ParentId), "Комментарий, на который вы отвечаете, не найден.");
             return ValidationProblem(ModelState);
         }
 
-        return Ok(comment);
+        if (result.Error == CreateCommentError.TooDeep)
+        {
+            ModelState.AddModelError(nameof(request.ParentId), "Достигнута максимальная глубина ответов (100). Ответьте на комментарий выше.");
+            return ValidationProblem(ModelState);
+        }
+
+        return Ok(result.Comment);
     }
 }
