@@ -100,8 +100,12 @@ public class AttachmentProcessor : IAttachmentProcessor
             return AttachmentResult.Fail("Допустимые форматы картинок: JPG, GIF, PNG.");
         }
 
-        var width = codec.Info.Width;
-        var height = codec.Info.Height;
+        // A photo can be stored turned, the camera only writes how to turn it (EXIF orientation).
+        // Width and height below are the size the user sees, after turning.
+        var origin = codec.EncodedOrigin;
+        var isTurned = origin >= SKEncodedOrigin.LeftTop;
+        var width = isTurned ? codec.Info.Height : codec.Info.Width;
+        var height = isTurned ? codec.Info.Width : codec.Info.Height;
         if ((long)width * height > MaxImagePixels)
         {
             return AttachmentResult.Fail("Картинка слишком большая.");
@@ -138,8 +142,9 @@ public class AttachmentProcessor : IAttachmentProcessor
             var newWidth = Math.Max(1, (int)Math.Round(width * scale));
             var newHeight = Math.Max(1, (int)Math.Round(height * scale));
 
+            // the picture is made smaller before it is turned, so for a turned one the sides are swapped back
             resized = bitmap.Resize(
-                new SKImageInfo(newWidth, newHeight),
+                isTurned ? new SKImageInfo(newHeight, newWidth) : new SKImageInfo(newWidth, newHeight),
                 new SKSamplingOptions(SKCubicResampler.Mitchell));
 
             if (resized == null)
@@ -149,8 +154,9 @@ public class AttachmentProcessor : IAttachmentProcessor
         }
 
         using (resized)
+        using (var turned = ApplyOrientation(resized ?? bitmap, origin))
         {
-            var result = resized ?? bitmap;
+            var result = turned ?? resized ?? bitmap;
 
             // JPEG stays JPEG, PNG and big GIF are saved as PNG (the library can not write GIF)
             var isJpeg = format == SKEncodedImageFormat.Jpeg;
@@ -168,6 +174,56 @@ public class AttachmentProcessor : IAttachmentProcessor
                 Height = result.Height
             });
         }
+    }
+
+    // Turns the picture the way the user sees it. Returns null if there is nothing to turn.
+    private static SKBitmap? ApplyOrientation(SKBitmap bitmap, SKEncodedOrigin origin)
+    {
+        if (origin == SKEncodedOrigin.TopLeft || origin == SKEncodedOrigin.Default)
+        {
+            return null;
+        }
+
+        var w = bitmap.Width;
+        var h = bitmap.Height;
+        var isTurned = origin >= SKEncodedOrigin.LeftTop;
+
+        var result = new SKBitmap(isTurned ? h : w, isTurned ? w : h);
+        using var canvas = new SKCanvas(result);
+
+        switch (origin)
+        {
+            case SKEncodedOrigin.TopRight:      // mirrored left to right
+                canvas.Translate(w, 0);
+                canvas.Scale(-1, 1);
+                break;
+            case SKEncodedOrigin.BottomRight:   // turned by 180 degrees
+                canvas.Translate(w, h);
+                canvas.RotateDegrees(180);
+                break;
+            case SKEncodedOrigin.BottomLeft:    // mirrored top to bottom
+                canvas.Translate(0, h);
+                canvas.Scale(1, -1);
+                break;
+            case SKEncodedOrigin.LeftTop:       // x and y swapped
+                canvas.SetMatrix(new SKMatrix(0, 1, 0, 1, 0, 0, 0, 0, 1));
+                break;
+            case SKEncodedOrigin.RightTop:      // turned by 90 degrees clockwise (a usual phone photo)
+                canvas.Translate(h, 0);
+                canvas.RotateDegrees(90);
+                break;
+            case SKEncodedOrigin.RightBottom:   // x and y swapped and turned by 180 degrees
+                canvas.SetMatrix(new SKMatrix(0, -1, h, -1, 0, w, 0, 0, 1));
+                break;
+            case SKEncodedOrigin.LeftBottom:    // turned by 90 degrees counterclockwise
+                canvas.Translate(0, w);
+                canvas.RotateDegrees(-90);
+                break;
+        }
+
+        // only turning and mirroring, so the pixels are copied as they are
+        canvas.DrawBitmap(bitmap, 0, 0, new SKSamplingOptions(SKFilterMode.Nearest));
+        return result;
     }
 
     private static string GetSafeFileName(string fileName)
