@@ -30,6 +30,9 @@ services:
       Storage__UploadsPath: /app/uploads
     volumes:
       - uploads:/app/uploads
+    # Reading big pictures needs a lot of memory. With the limit a bad request can not take all the memory
+    # of the server (SQL Server runs on the same machine), the container is just started again.
+    mem_limit: 1g
     depends_on:
       db:
         condition: service_healthy
