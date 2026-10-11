@@ -271,7 +271,7 @@ file=<картинка или TXT>       (необязательное)
 
 ## База данных
 
-Две таблицы: `Comments` и `Attachments`. Схема создаётся миграциями EF Core (`backend/CommentsApi/Migrations`). Для сравнения проекта с реализацией в MySQL Workbench в `docs/schema.sql` лежит описание тех же таблиц в синтаксисе MySQL (File → Open SQL Script, затем Database → Reverse Engineer).
+Две таблицы: `Comments` и `Attachments`. Схема создаётся миграциями EF Core (`backend/CommentsApi/Migrations`). Для сравнения проекта с реализацией в MySQL Workbench в `docs/schema.sql` лежит описание тех же таблиц в синтаксисе MySQL (File → Open SQL Script, затем Database → Reverse Engineer). Скрипт проверен на MySQL 8.4: таблицы создаются, а ключи работают так же, как в приложении.
 
 ```mermaid
 erDiagram

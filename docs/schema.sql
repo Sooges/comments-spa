@@ -4,6 +4,8 @@
 -- (backend/CommentsApi/Migrations). This file describes the same tables in MySQL syntax, so the schema
 -- can be opened in MySQL Workbench: File -> Open SQL Script, run it, and then
 -- Database -> Reverse Engineer to get the EER diagram.
+-- The script was run on MySQL 8.4, the keys work as in the application: a comment with replies can not be
+-- deleted, an attachment is deleted together with its comment, a comment has not more than one attachment.
 
 CREATE SCHEMA IF NOT EXISTS `CommentsDb` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `CommentsDb`;
