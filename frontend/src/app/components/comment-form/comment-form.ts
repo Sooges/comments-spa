@@ -25,6 +25,11 @@ const PATTERN_MESSAGES: Record<FieldName, string> = {
   styleUrl: './comment-form.css'
 })
 export class CommentForm implements OnInit {
+  // There can be several forms on the page (the main one and the forms for replies),
+  // so the ids of the fields must be different, otherwise a click on a label goes to the wrong form.
+  private static nextUid = 1;
+  protected readonly uid = CommentForm.nextUid++;
+
   private readonly fb = inject(FormBuilder);
   private readonly commentsService = inject(CommentsService);
 
