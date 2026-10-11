@@ -4,6 +4,8 @@ SPA-приложение «Комментарии»: пользователи о
 
 **Стек:** ASP.NET Core Web API (.NET 10), Entity Framework Core, MS SQL Server, Angular 22, SignalR (WebSocket), nginx, Docker.
 
+**Работающее приложение:** http://63.178.231.154/ (демо-сервер на AWS EC2, запущено через Docker Compose; адрес временный).
+
 ## Функции
 
 - Форма комментария: `User Name` (латиница и цифры), `E-mail`, `Home page` (необязательно), `Text`, CAPTCHA, файл (необязательно). Проверка на клиенте и на сервере.
