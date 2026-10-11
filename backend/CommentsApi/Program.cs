@@ -11,7 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+// The list is sent as a tree. The default limit of the JSON depth is 32, which is only 16 levels of replies
+// (every level adds an object and an array), so it is raised. The depth of replies is limited in CommentService.
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.MaxDepth = 256);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

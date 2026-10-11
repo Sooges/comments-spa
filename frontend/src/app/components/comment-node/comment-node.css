@@ -121,6 +121,13 @@ app-comment-form {
   border-left: 2px solid #e0e3e8;
 }
 
+/* the replies of the deepest levels are not moved to the right any more */
+.replies.flat {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+
 .replies .header {
   background: #f3f1fb;
 }

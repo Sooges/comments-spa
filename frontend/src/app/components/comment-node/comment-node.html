@@ -49,9 +49,9 @@
   </div>
 
   @if (comment().replies.length > 0) {
-    <div class="replies">
+    <div class="replies" [class.flat]="depth() >= maxIndentLevels">
       @for (reply of comment().replies; track reply.id) {
-        <app-comment-node [comment]="reply" [parent]="comment()" (changed)="changed.emit()" />
+        <app-comment-node [comment]="reply" [parent]="comment()" [depth]="depth() + 1" (changed)="changed.emit()" />
       }
     </div>
   }

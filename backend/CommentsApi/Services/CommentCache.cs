@@ -33,7 +33,14 @@ public class CommentCache : ICommentCache
         }
 
         var page = await load();
-        _cache.Set(key, page, Lifetime);
+
+        // The pages after the last one are empty and there can be a lot of them (any page number is allowed),
+        // so they are not kept in the memory.
+        if (query.Page <= Math.Max(page.TotalPages, 1))
+        {
+            _cache.Set(key, page, Lifetime);
+        }
+
         return page;
     }
 

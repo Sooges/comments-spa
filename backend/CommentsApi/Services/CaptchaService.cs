@@ -15,6 +15,7 @@ public class CaptchaService : ICaptchaService
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(5);
 
     private readonly IMemoryCache _cache;
+    private readonly object _validateLock = new();
 
     public CaptchaService(IMemoryCache cache)
     {
@@ -39,13 +40,20 @@ public class CaptchaService : ICaptchaService
     public bool Validate(string id, string code)
     {
         var key = GetCacheKey(id);
-        if (!_cache.TryGetValue(key, out string? expectedCode))
-        {
-            return false;
-        }
+        string? expectedCode;
 
-        // a captcha can not be used twice, even if the code was wrong
-        _cache.Remove(key);
+        // Finding the code and removing it is one step. Without the lock several parallel requests
+        // could find the same code before the first one removes it, and one captcha would be used many times.
+        lock (_validateLock)
+        {
+            if (!_cache.TryGetValue(key, out expectedCode))
+            {
+                return false;
+            }
+
+            // a captcha can not be used twice, even if the code was wrong
+            _cache.Remove(key);
+        }
 
         return string.Equals(expectedCode, code.Trim(), StringComparison.OrdinalIgnoreCase);
     }

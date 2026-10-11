@@ -23,6 +23,11 @@ public class AppDbContext : DbContext
             entity.Property(c => c.IpAddress).IsRequired().HasMaxLength(45);
             entity.Property(c => c.UserAgent).IsRequired().HasMaxLength(512);
 
+            // The date is saved in UTC, but the database does not store the kind of the date, so EF reads it
+            // as "unspecified" and the JSON has no "Z" at the end. The browser would then take it as local time.
+            entity.Property(c => c.CreatedAt)
+                .HasConversion(date => date, date => DateTime.SpecifyKind(date, DateTimeKind.Utc));
+
             // a comment can have any number of replies
             entity.HasOne(c => c.Parent)
                 .WithMany(c => c.Replies)

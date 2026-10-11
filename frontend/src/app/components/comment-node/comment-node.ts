@@ -24,6 +24,13 @@ export class CommentNode {
   // top-level comments are shown in the table, which has its own header
   readonly showHeader = input(true);
 
+  // how deep the comment is: 0 for a top-level one
+  readonly depth = input(0);
+
+  // Every level of replies is moved to the right, but only the first levels. Deeper replies stay
+  // on the same line, otherwise a long chain would go out of the screen.
+  protected readonly maxIndentLevels = 6;
+
   // a reply was saved, the list has to be loaded again
   readonly changed = output<void>();
 

@@ -3,24 +3,24 @@
 
   <div class="row">
     <div class="field">
-      <label for="userName">User Name *</label>
-      <input id="userName" type="text" formControlName="userName" autocomplete="nickname">
+      <label [attr.for]="'userName-' + uid">User Name *</label>
+      <input [id]="'userName-' + uid" type="text" formControlName="userName" autocomplete="nickname">
       @if (showError('userName')) {
         <div class="error">{{ errorText('userName') }}</div>
       }
     </div>
 
     <div class="field">
-      <label for="email">E-mail *</label>
-      <input id="email" type="email" formControlName="email" autocomplete="email">
+      <label [attr.for]="'email-' + uid">E-mail *</label>
+      <input [id]="'email-' + uid" type="email" formControlName="email" autocomplete="email">
       @if (showError('email')) {
         <div class="error">{{ errorText('email') }}</div>
       }
     </div>
 
     <div class="field">
-      <label for="homePage">Home page</label>
-      <input id="homePage" type="url" formControlName="homePage" placeholder="https://">
+      <label [attr.for]="'homePage-' + uid">Home page</label>
+      <input [id]="'homePage-' + uid" type="url" formControlName="homePage" placeholder="https://">
       @if (showError('homePage')) {
         <div class="error">{{ errorText('homePage') }}</div>
       }
@@ -28,7 +28,7 @@
   </div>
 
   <div class="field">
-    <label for="text">Text *</label>
+    <label [attr.for]="'text-' + uid">Text *</label>
     <div class="toolbar">
       <button type="button" class="secondary" title="Курсив" (click)="insertTag('i')">[i]</button>
       <button type="button" class="secondary" title="Жирный" (click)="insertTag('strong')">[strong]</button>
@@ -38,7 +38,7 @@
         {{ previewOpen() ? 'Скрыть предпросмотр' : 'Предпросмотр' }}
       </button>
     </div>
-    <textarea #textArea id="text" rows="6" formControlName="text"></textarea>
+    <textarea #textArea [id]="'text-' + uid" rows="6" formControlName="text"></textarea>
     @if (showError('text')) {
       <div class="error">{{ errorText('text') }}</div>
     }
@@ -56,8 +56,8 @@
   </div>
 
   <div class="field">
-    <label for="file">Файл</label>
-    <input #fileInput id="file" type="file" accept=".jpg,.jpeg,.png,.gif,.txt" (change)="onFileChange($event)">
+    <label [attr.for]="'file-' + uid">Файл</label>
+    <input #fileInput [id]="'file-' + uid" type="file" accept=".jpg,.jpeg,.png,.gif,.txt" (change)="onFileChange($event)">
     <div class="hint">Картинка JPG, GIF, PNG (если больше 320×240, будет уменьшена) или текстовый файл TXT до 100 КБ.</div>
     @if (fileError()) {
       <div class="error">{{ fileError() }}</div>
@@ -65,13 +65,13 @@
   </div>
 
   <div class="field captcha">
-    <label for="captchaCode">CAPTCHA *</label>
+    <label [attr.for]="'captchaCode-' + uid">CAPTCHA *</label>
     <div class="captcha-row">
       @if (captcha(); as current) {
         <img [src]="current.image" width="170" height="60" alt="CAPTCHA">
       }
       <button type="button" class="secondary" (click)="refreshCaptcha()">Обновить</button>
-      <input id="captchaCode" type="text" formControlName="captchaCode" autocomplete="off" placeholder="Код с картинки">
+      <input [id]="'captchaCode-' + uid" type="text" formControlName="captchaCode" autocomplete="off" placeholder="Код с картинки">
     </div>
     @if (captchaError()) {
       <div class="error">{{ captchaError() }} Введите код с новой картинки.</div>

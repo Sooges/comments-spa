@@ -5,9 +5,10 @@ namespace CommentsApi.Services;
 public interface ICommentService
 {
     /// <summary>
-    /// Saves a new comment. Returns null if the parent comment does not exist.
+    /// Saves a new comment. The result has an error if the parent comment does not exist
+    /// or the replies are already too deep.
     /// </summary>
-    Task<CommentDto?> CreateAsync(
+    Task<CreateCommentResult> CreateAsync(
         CreateCommentRequest request,
         PreparedAttachment? attachment,
         string ipAddress,
