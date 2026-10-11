@@ -58,6 +58,15 @@ public class CommentsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
+        // The captcha is checked before the file is processed: reading a big picture needs a lot of memory
+        // and time, so it must not be done for requests that did not pass the captcha.
+        // Every captcha can be used only once, so the page gets a new one after any error.
+        if (!_captchaService.Validate(request.CaptchaId, request.CaptchaCode))
+        {
+            ModelState.AddModelError(nameof(request.CaptchaCode), "Неверный код с картинки.");
+            return ValidationProblem(ModelState);
+        }
+
         PreparedAttachment? attachment = null;
         if (request.File != null)
         {
@@ -69,13 +78,6 @@ public class CommentsController : ControllerBase
             }
 
             attachment = file.Attachment;
-        }
-
-        // the captcha is checked last, because every captcha can be used only once
-        if (!_captchaService.Validate(request.CaptchaId, request.CaptchaCode))
-        {
-            ModelState.AddModelError(nameof(request.CaptchaCode), "Неверный код с картинки.");
-            return ValidationProblem(ModelState);
         }
 
         // only the checked and escaped HTML is saved
